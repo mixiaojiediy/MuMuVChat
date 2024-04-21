@@ -70,6 +70,14 @@ access_token获取地址：https://console.bce.baidu.com/tools/#/index
 
 ![image-20240421154137487](https://cdn.jsdelivr.net/gh/mixiaojiediy/MDPicBed@main//img202404211541581.png)
 
+api也要付费购买一下或者选择免费的大模型api替换一下：https://console.bce.baidu.com/qianfan/ais/console/onlineService
+
+![image-20240421162739172](https://cdn.jsdelivr.net/gh/mixiaojiediy/MDPicBed@main//img202404211627249.png)
+
+![image-20240421162818468](https://cdn.jsdelivr.net/gh/mixiaojiediy/MDPicBed@main//img202404211628510.png)
+
+
+
 ### 项目3:MuMuVChat
 
 MuMuVoiceChat/mumuvchat/src/main/java/com/iflytek/voicedemo/MuMuVChat.java中注意替换access_token
