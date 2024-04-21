@@ -6,8 +6,9 @@
 <a href="https://github.com/mixiaojiediy/MuMuVChat/issues"><img src="https://img.shields.io/github/issues/mixiaojiediy/MuMuVChat" alt="Issues Badge"/></a>
 <a href="https://github.com/mixiaojiediy/MuMuVChat/graphs/contributors"><img alt="GitHub contributors" src="https://img.shields.io/github/contributors/mixiaojiediy/MuMuVChat?color=2b9348"></a>
 <a><img src="https://img.shields.io/github/license/mixiaojiediy/MuMuVChat?color=2b9348" alt="License Badge"/></a>
-
 <i>喜欢这个项目吗？请考虑给 Star ⭐️ 以帮助改进！</i>
+
+</div>
 
 ---
 
@@ -21,8 +22,6 @@
 >**项目3**：MuMuVChat
 >**项目3简介**：科大讯飞语音配合百度千帆大模型做的智能语音助手app
 >**视频3介绍**：[科大讯飞语音遇上百度千帆大模型](https://www.bilibili.com/video/BV1ht421w7MS/)
-
-</div>
 
 ## 项目说明 
 
