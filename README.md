@@ -6,6 +6,8 @@
 <a href="https://github.com/mixiaojiediy/MuMuVChat/issues"><img src="https://img.shields.io/github/issues/mixiaojiediy/MuMuVChat" alt="Issues Badge"/></a>
 <a href="https://github.com/mixiaojiediy/MuMuVChat/graphs/contributors"><img alt="GitHub contributors" src="https://img.shields.io/github/contributors/mixiaojiediy/MuMuVChat?color=2b9348"></a>
 <a><img src="https://img.shields.io/github/license/mixiaojiediy/MuMuVChat?color=2b9348" alt="License Badge"/></a>
+</div>
+<div align="center">
 <i>喜欢这个项目吗？请考虑给 Star ⭐️ 以帮助改进！</i>
 
 </div>
