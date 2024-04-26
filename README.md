@@ -29,48 +29,27 @@
 
 ### 项目1:app
 
-MuMuVoiceChat/app/src/main/res/values/strings.xml中请注意替换app_id
+/res/values/strings.xml中
+
+添加app_id；
 
 ```xml
-<!-- 请替换成在语音云官网申请的appid -->
 <string name="app_id">xxxxxxxx</string>
 ```
 
 app_id获取地址：https://console.xfyun.cn/services/sparkapiCenter
-
 ![image-20240421154437816](https://cdn.jsdelivr.net/gh/mixiaojiediy/MDPicBed@main//img202404211544849.png)
 
 ### 项目2:MuMuChat
 
-MuMuVoiceChat/mumuchat/src/main/java/com/example/mumuchat/MainActivity.java中注意替换access_token
+/res/values/strings.xml中
 
-```java
-private void sendRequest(String chatContent) {
-    new Thread(() -> {
-        try {
-            MediaType mediaType = MediaType.parse("application/json");
-            Log.d("mumuchat3",chatContent);
-            RequestBody body = RequestBody.create(mediaType, chatContent);
-            Request request = new Request.Builder()
-                    .url("https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed?access_token=<百度千帆大模型平台申请一下,然后替换>")
-                    .method("POST", body)
-                    .addHeader("Content-Type", "application/json")
-                    .build();
-            myResponse = HTTP_CLIENT.newCall(request).execute();
-            String result = parseJSONWithGSON(myResponse.body().string());
-            showResponse(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }).start();
-}
-```
+添加api_path和access_token；
 
 access_token获取地址：https://console.bce.baidu.com/tools/#/index
-
 ![image-20240421154137487](https://cdn.jsdelivr.net/gh/mixiaojiediy/MDPicBed@main//img202404211541581.png)
 
-api也要付费购买一下或者选择免费的大模型api替换一下：https://console.bce.baidu.com/qianfan/ais/console/onlineService
+api_path也要付费购买一下或者选择免费的大模型api_path替换一下：https://console.bce.baidu.com/qianfan/ais/console/onlineService
 
 ![image-20240421162739172](https://cdn.jsdelivr.net/gh/mixiaojiediy/MDPicBed@main//img202404211627249.png)
 
@@ -80,34 +59,13 @@ api也要付费购买一下或者选择免费的大模型api替换一下：https
 
 ### 项目3:MuMuVChat
 
-MuMuVoiceChat/mumuvchat/src/main/java/com/iflytek/voicedemo/MuMuVChat.java中注意替换access_token
+/res/values/strings.xml中
 
-```java
-private void sendRequest(String chatContent) {
-    new Thread(() -> {
-        try {
-            MediaType mediaType = MediaType.parse("application/json");
-            Log.d("mumuchat3", chatContent);
-            RequestBody body = RequestBody.create(mediaType, chatContent);
-            Request request = new Request.Builder()
-                    .url("https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k?access_token=<百度千帆大模型平台申请一下,然后替换>")
-                    .method("POST", body)
-                    .addHeader("Content-Type", "application/json")
-                    .build();
-            myResponse = HTTP_CLIENT.newCall(request).execute();
-            String result = parseJSONWithGSON(myResponse.body().string());
-            showResponse(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }).start();
-}
-```
-
-MuMuVoiceChat/mumuvchat/src/main/res/values/strings.xml中注意替换app_id
+添加app_id、api_path和access_token；
 
 ```XML
-<!-- 请替换成在语音云官网申请的appid -->
+<string name="api_path">xxxxxx</string>
+<string name="access_token">xxxxxx</string>
 <string name="app_id">xxxxxxxx</string>
 ```
 
