@@ -13,3 +13,15 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+/0.Reference
+/1.3D_Model
+/2.Docs
+/3.Firmware
+/4.Hardware
+/6.Video
+240416_MuMuVoiceChat.docx
+
+private.
+
+~$*.docx
