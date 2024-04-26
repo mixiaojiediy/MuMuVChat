@@ -1,0 +1,4 @@
+<resources>
+    <string name="api_path">https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed?</string>
+    <string name="access_token">24.0f5eed30a58e7e6bbcaeec9e81b06521.2592000.1715741687.282335-61409809</string>
+</resources>

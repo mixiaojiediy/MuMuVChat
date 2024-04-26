@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <!-- 请替换成在语音云官网申请的appid -->
+    <string name="app_id">3ab75e06</string>
+</resources>
