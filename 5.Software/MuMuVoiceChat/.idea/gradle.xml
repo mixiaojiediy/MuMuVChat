@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/mumuchat" />
             <option value="$PROJECT_DIR$/mumuvchat" />
+            <option value="$PROJECT_DIR$/mumuvchat_auto" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

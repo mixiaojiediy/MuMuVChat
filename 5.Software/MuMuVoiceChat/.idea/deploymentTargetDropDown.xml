@@ -37,6 +37,9 @@
       <entry key="mumuvchat">
         <State />
       </entry>
+      <entry key="mumuvchat_auto">
+        <State />
+      </entry>
     </value>
   </component>
 </project>

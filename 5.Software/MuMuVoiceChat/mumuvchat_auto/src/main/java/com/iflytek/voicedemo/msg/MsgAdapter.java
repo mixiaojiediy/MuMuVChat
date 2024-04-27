@@ -1,4 +1,4 @@
-package com.example.mumuchat;
+package com.iflytek.voicedemo.msg;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,14 +8,14 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.iflytek.voicedemo.R;
+
 import java.util.List;
 
 public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
 
-    private final List<Msg> mMsgList;
-    public MsgAdapter(List<Msg> msgList) {
-        mMsgList = msgList;
-    }
+    private List<Msg> mMsgList;
+
     static class ViewHolder extends RecyclerView.ViewHolder {
 
         LinearLayout leftLayout;
@@ -35,7 +35,9 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
         }
     }
 
-
+    public MsgAdapter(List<Msg> msgList) {
+        mMsgList = msgList;
+    }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -51,7 +53,7 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
             holder.leftLayout.setVisibility(View.VISIBLE);
             holder.rightLayout.setVisibility(View.GONE);
             holder.leftMsg.setText(msg.getContent());
-        } else if(msg.getType() == Msg.TYPE_SENT) {
+        } else if (msg.getType() == Msg.TYPE_SENT) {
             // 如果是发出的消息，则显示右边的消息布局，将左边的消息布局隐藏
             holder.rightLayout.setVisibility(View.VISIBLE);
             holder.leftLayout.setVisibility(View.GONE);
