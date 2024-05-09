@@ -18,6 +18,22 @@
           <timeTargetWasSelectedWithDropDown value="2024-04-16T07:30:17.366527200Z" />
         </State>
       </entry>
+      <entry key="mumuavchat">
+        <State>
+          <targetSelectedWithDropDown>
+            <Target>
+              <type value="QUICK_BOOT_TARGET" />
+              <deviceKey>
+                <Key>
+                  <type value="VIRTUAL_DEVICE_PATH" />
+                  <value value="D:\Android\AVD\.android\avd\Pixel_8_Pro_API_28.avd" />
+                </Key>
+              </deviceKey>
+            </Target>
+          </targetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2024-05-07T08:52:02.572463300Z" />
+        </State>
+      </entry>
       <entry key="mumuchat">
         <State>
           <targetSelectedWithDropDown>
@@ -37,7 +53,7 @@
       <entry key="mumuvchat">
         <State />
       </entry>
-      <entry key="mumuvchat_auto">
+      <entry key="test">
         <State />
       </entry>
     </value>

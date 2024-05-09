@@ -26,4 +26,4 @@ rootProject.name = "mumuvoicechat"
 include ':app'
 include ':mumuchat'
 include ':mumuvchat'
-include ':mumuvchat_auto'
+include ':mumuavchat'

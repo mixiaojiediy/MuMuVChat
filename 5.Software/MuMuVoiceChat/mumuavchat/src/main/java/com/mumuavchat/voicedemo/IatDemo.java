@@ -1,4 +1,4 @@
-package com.iflytek.voicedemo;
+package com.mumuavchat.voicedemo;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -24,9 +24,9 @@ import com.iflytek.cloud.SpeechError;
 import com.iflytek.cloud.SpeechRecognizer;
 import com.iflytek.cloud.ui.RecognizerDialog;
 import com.iflytek.cloud.ui.RecognizerDialogListener;
-import com.iflytek.speech.setting.IatSettings;
-import com.iflytek.speech.util.FucUtil;
-import com.iflytek.speech.util.JsonParser;
+import com.mumuavchat.speech.setting.IatSettings;
+import com.mumuavchat.speech.util.FucUtil;
+import com.mumuavchat.speech.util.JsonParser;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -361,7 +361,7 @@ public class IatDemo extends Activity implements OnClickListener {
         mIat.setParameter(SpeechConstant.VAD_BOS, mSharedPreferences.getString("iat_vadbos_preference", "4000"));
 
         // 设置语音后端点:后端点静音检测时间，即用户停止说话多长时间内即认为不再输入， 自动停止录音
-        mIat.setParameter(SpeechConstant.VAD_EOS, mSharedPreferences.getString("iat_vadeos_preference", "4000"));
+        mIat.setParameter(SpeechConstant.VAD_EOS, mSharedPreferences.getString("iat_vadeos_preference", "1000"));
 
         // 设置标点符号,设置为"0"返回结果无标点,设置为"1"返回结果有标点
         mIat.setParameter(SpeechConstant.ASR_PTT, mSharedPreferences.getString("iat_punc_preference", "1"));
