@@ -27,7 +27,6 @@ import com.iflytek.cloud.SpeechConstant;
 import com.iflytek.cloud.SpeechError;
 import com.iflytek.cloud.SpeechRecognizer;
 import com.mumuavchat.speech.util.JsonParser;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -71,16 +70,20 @@ public class test extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test);
-        // 获取程序界面中的两个按钮
-        startRecord = findViewById(R.id.startRecord);
-        stopRecord = findViewById(R.id.stopRecord);
-        playRecord = findViewById(R.id.playRecord);
-        contentRecord = findViewById(R.id.contentRecord);
+        initView();
         createAudioRecord();
         initPCMFile();
         requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 0x123);
         // 使用SpeechRecognizer对象，可根据回调消息自定义界面；
         mIat = SpeechRecognizer.createRecognizer(this, null);
+    }
+
+    private void initView() {
+        // 获取程序界面中的两个按钮
+        startRecord = findViewById(R.id.startRecord);
+        stopRecord = findViewById(R.id.stopRecord);
+        playRecord = findViewById(R.id.playRecord);
+        contentRecord = findViewById(R.id.contentRecord);
     }
 
     /**
@@ -114,7 +117,7 @@ public class test extends AppCompatActivity {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 return;
             }
-            audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, channelConfig, audioFormat, bufferSize);
+            audioRecord = new AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION, SAMPLE_RATE, channelConfig, audioFormat, bufferSize);
             View.OnClickListener listener = source ->
             {
                 int id = source.getId();// 单击录音按钮
@@ -145,6 +148,9 @@ public class test extends AppCompatActivity {
 
     private void createAudioRecord() {
         bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, channelConfig, audioFormat);
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+        audioManager.setSpeakerphoneOn(true);
     }
 
     private void initPCMFile() {
@@ -158,9 +164,7 @@ public class test extends AppCompatActivity {
         }
         isRecording = true;
         final byte[] buffer = new byte[bufferSize];
-        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-        audioManager.setSpeakerphoneOn(true);
+
         audioRecord.startRecording();
         new Thread(() -> {
             FileOutputStream fileOutputStream = null;
@@ -187,9 +191,9 @@ public class test extends AppCompatActivity {
     }
 
     private void stopRecord() {
-        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioManager.setMode(AudioManager.MODE_NORMAL);
-        audioManager.setSpeakerphoneOn(false);
+//        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+//        audioManager.setMode(AudioManager.MODE_NORMAL);
+//        audioManager.setSpeakerphoneOn(false);
         isRecording = false;
         if (audioRecord != null) {
             audioRecord.stop();
@@ -238,14 +242,12 @@ public class test extends AppCompatActivity {
         mIat.setParameter(SpeechConstant.LANGUAGE, "zh_cn");
         // 设置语言区域
         mIat.setParameter(SpeechConstant.ACCENT, "mandarin");
-        //此处用于设置dialog中不显示错误码信息
-        //mIat.setParameter("view_tips_plain","false");
 
         // 设置语音前端点:静音超时时间，即用户多长时间不说话则当做超时处理
         mIat.setParameter(SpeechConstant.VAD_BOS, "4000");
 
         // 设置语音后端点:后端点静音检测时间，即用户停止说话多长时间内即认为不再输入， 自动停止录音
-        mIat.setParameter(SpeechConstant.VAD_EOS, "1000");
+        mIat.setParameter(SpeechConstant.VAD_EOS, "4000");
 
         // 设置标点符号,设置为"0"返回结果无标点,设置为"1"返回结果有标点
         mIat.setParameter(SpeechConstant.ASR_PTT, "1");

@@ -25,3 +25,6 @@ local.properties
 *private*.xml
 
 ~$*.docx
+
+/openai
+/表情包

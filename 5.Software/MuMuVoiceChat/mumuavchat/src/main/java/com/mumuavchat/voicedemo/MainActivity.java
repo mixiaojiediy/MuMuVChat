@@ -86,6 +86,10 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.testBtn).setOnClickListener(v -> {
             isPrivacyConfirm(new Intent(MainActivity.this, test.class));
         });
+        // animtest
+        findViewById(R.id.animBtn).setOnClickListener(v -> {
+            isPrivacyConfirm(new Intent(MainActivity.this, animTest.class));
+        });
     }
 
     private Toast mToast;

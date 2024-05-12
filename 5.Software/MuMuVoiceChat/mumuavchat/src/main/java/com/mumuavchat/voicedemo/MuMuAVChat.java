@@ -3,15 +3,18 @@ package com.mumuavchat.voicedemo;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.AnimationDrawable;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.Window;
+import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -72,7 +75,7 @@ public class MuMuAVChat extends AppCompatActivity {
             AudioFormat.CHANNEL_IN_MONO,
             AudioFormat.ENCODING_PCM_16BIT
     );
-    private static final int SILENCE_TIMEOUT_MS = 4000; // 4秒无声超时
+    private static final int SILENCE_TIMEOUT_MS = 2000; // 4秒无声超时
     private boolean permissionToRecordAccepted = false;
     private String[] permissions = {Manifest.permission.RECORD_AUDIO};
     private AudioManager audioManager;
@@ -99,22 +102,30 @@ public class MuMuAVChat extends AppCompatActivity {
     private final ChatContent chatContent = new ChatContent();
 
     private Handler mainHandler;
-
+    private int speakingThreshold;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+//        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.mumuavchat);
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
         initView();
         initIat();
         initTTS();
+        initAudioRecord();
+        speakingThreshold = getDynamicThreshold(3); // 采集3秒的背景噪音,实测安静环境下是503
         mainHandler = new Handler(Looper.getMainLooper());
         startContinuousRecording();
     }
 
     private void initView() {
+        // 使状态栏隐藏
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        ImageView imageView = findViewById(R.id.imageView);
+        imageView.setBackgroundResource(R.drawable.anim_emoticon_sequence);
+        AnimationDrawable anim = (AnimationDrawable) imageView.getBackground();
+        imageView.post(anim::start);
         msgRecyclerView = findViewById(R.id.msg_recycler_view);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         msgRecyclerView.setLayoutManager(layoutManager);
@@ -133,7 +144,7 @@ public class MuMuAVChat extends AppCompatActivity {
     }
 
     private void initIat() {
-        mIat = SpeechRecognizer.createRecognizer(this, null); //创建一个语音识别器
+        mIat = SpeechRecognizer.createRecognizer(this, mInitListener); //创建一个语音识别器
         mIat.setParameter(SpeechConstant.PARAMS, null); // 清空参数
         mIat.setParameter(SpeechConstant.ENGINE_TYPE, SpeechConstant.TYPE_CLOUD); // 设置听写引擎
         mIat.setParameter(SpeechConstant.RESULT_TYPE, "json"); // 设置返回结果格式
@@ -141,16 +152,17 @@ public class MuMuAVChat extends AppCompatActivity {
         // 设置语音前端点:静音超时时间，即用户多长时间不说话则当做超时处理
         mIat.setParameter(SpeechConstant.VAD_BOS, "4000");
         // 设置语音后端点:后端点静音检测时间，即用户停止说话多长时间内即认为不再输入， 自动停止录音
-        mIat.setParameter(SpeechConstant.VAD_EOS, "1000");
+        mIat.setParameter(SpeechConstant.VAD_EOS, "4000");
         // 设置标点符号,设置为"0"返回结果无标点,设置为"1"返回结果有标点
         mIat.setParameter(SpeechConstant.ASR_PTT, "1");
     }
 
     private void initTTS() {
-        mTts = SpeechSynthesizer.createSynthesizer(this, null);// 初始化合成对象
+        mTts = SpeechSynthesizer.createSynthesizer(this, mInitListener);// 初始化合成对象
         mTts.setParameter(SpeechConstant.PARAMS, null); // 清空参数
         mTts.setParameter(SpeechConstant.ENGINE_TYPE, SpeechConstant.TYPE_CLOUD); // 设置听写引擎
-        mTts.setParameter(SpeechConstant.VOICE_NAME, "xiaoyan");
+        mTts.setParameter(SpeechConstant.VOICE_NAME, "x4_ningning");
+//        mTts.setParameter(SpeechConstant.VOICE_NAME, "xiaoyan");
         mTts.setParameter(SpeechConstant.SPEED, "50"); //设置合成语速
         mTts.setParameter(SpeechConstant.PITCH, "50"); //设置合成音调
         mTts.setParameter(SpeechConstant.VOLUME, "80"); //设置合成音量
@@ -164,15 +176,7 @@ public class MuMuAVChat extends AppCompatActivity {
         }
     };
 
-    private void showTip(final String str) {
-        if (mToast != null) {
-            mToast.cancel();
-        }
-        mToast = Toast.makeText(getApplicationContext(), str, Toast.LENGTH_SHORT);
-        mToast.show();
-    }
-
-    private void startContinuousRecording() {
+    private void initAudioRecord() {
         audioRecord = new AudioRecord(
                 MediaRecorder.AudioSource.VOICE_COMMUNICATION,
                 SAMPLE_RATE,
@@ -183,7 +187,39 @@ public class MuMuAVChat extends AppCompatActivity {
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
         audioManager.setSpeakerphoneOn(true);
+    }
 
+    private int getDynamicThreshold(int seconds) {
+        byte[] audioBuffer = new byte[BUFFER_SIZE];
+        long sumAmplitude = 0;
+        int totalSamples = 0;
+
+        audioRecord.startRecording();
+        long endTime = System.currentTimeMillis() + seconds * 1000;
+        while (System.currentTimeMillis() < endTime) {
+            int readBytes = audioRecord.read(audioBuffer, 0, audioBuffer.length);
+            if (readBytes > 0) {
+                for (int i = 0; i < readBytes; i += 2) {
+                    short amplitude = (short) ((audioBuffer[i] & 0xff) | (audioBuffer[i + 1] << 8));
+                    sumAmplitude += Math.abs(amplitude);
+                }
+                totalSamples += readBytes / 2;
+            }
+        }
+        audioRecord.stop();
+        return (int) (sumAmplitude / totalSamples) + 2000; // 动态阈值加500的偏移
+    }
+
+
+    private void showTip(final String str) {
+        if (mToast != null) {
+            mToast.cancel();
+        }
+        mToast = Toast.makeText(getApplicationContext(), str, Toast.LENGTH_SHORT);
+        mToast.show();
+    }
+
+    private void startContinuousRecording() {
         isRecording = true;
         lastSpokenTime = System.currentTimeMillis();
         silenceTimer = new Timer();
@@ -214,42 +250,41 @@ public class MuMuAVChat extends AppCompatActivity {
 
         while (isRecording) {
             int readBytes = audioRecord.read(audioBuffer, 0, audioBuffer.length);
-            if (readBytes > 0) {
-                boolean speaking = isUserSpeaking(audioBuffer, readBytes);
-                if (speaking) {
-                    userSpeaking = true;
-                    lastSpokenTime = System.currentTimeMillis();
-                    if (dos == null) {
-                        // 开始新的音频段
-                        audioFile = startNewAudioSegmentFile();
-                        dos = startNewAudioSegment(audioFile);
-                    }
-                    try {
-                        dos.write(audioBuffer, 0, readBytes);
-                    } catch (IOException e) {
-                        Log.e(LOG_TAG, "Error writing audio data", e);
-                    }
-                } else {
+            boolean speaking = isUserSpeaking(audioBuffer, readBytes);
+            if (speaking) {
+                userSpeaking = true;
+                lastSpokenTime = System.currentTimeMillis();
+            } else {
+                if (System.currentTimeMillis() - lastSpokenTime >= SILENCE_TIMEOUT_MS && dos != null) {
                     userSpeaking = false;
-                    if (System.currentTimeMillis() - lastSpokenTime >= SILENCE_TIMEOUT_MS && dos != null) {
-                        // 超时无声，保存音频文件
-                        try {
-                            dos.close();
-                            dos = null;
-                            if (audioFile != null) {
-                                // 确保在主线程中执行语音识别或大模型API调用
-                                final File finalAudioFile = audioFile;
-                                mainHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        executeStream(finalAudioFile);
-                                    }
-                                });
-                            }
-                        } catch (IOException e) {
-                            Log.e(LOG_TAG, "Error closing audio file", e);
+                    // 超时无声，保存音频文件
+                    try {
+                        dos.close();
+                        dos = null;
+                        if (audioFile != null) {
+                            final File finalAudioFile = audioFile;
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    executeStream(finalAudioFile);
+                                }
+                            });
                         }
+                    } catch (IOException e) {
+                        Log.e(LOG_TAG, "Error closing audio file", e);
                     }
+                }
+            }
+            if (userSpeaking) {
+                if (dos == null) {
+                    // 开始新的音频段
+                    audioFile = startNewAudioSegmentFile();
+                    dos = startNewAudioSegment(audioFile);
+                }
+                try {
+                    dos.write(audioBuffer, 0, readBytes);
+                } catch (IOException e) {
+                    Log.e(LOG_TAG, "Error writing audio data", e);
                 }
             }
         }
@@ -294,7 +329,8 @@ public class MuMuAVChat extends AppCompatActivity {
             short amplitude = (short) ((audioBuffer[i] & 0xff) | (audioBuffer[i + 1] << 8));
             sumAmplitude += Math.abs(amplitude);
         }
-        return sumAmplitude / (length / 2) > 1000; // 阈值1000可以调整
+        return sumAmplitude / (length / 2) > 2000; // 阈值1000可以调整
+//        return sumAmplitude / (length / 2) > speakingThreshold; // 阈值1000可以调整
     }
 
     private void checkSilenceTimeout() {
@@ -343,8 +379,6 @@ public class MuMuAVChat extends AppCompatActivity {
 
         @Override
         public void onBeginOfSpeech() {
-            // 此回调表示：sdk内部录音机已经准备好了，用户可以开始语音输入
-//            showTip("开始说话");
         }
 
         @Override
@@ -357,8 +391,6 @@ public class MuMuAVChat extends AppCompatActivity {
 
         @Override
         public void onEndOfSpeech() {
-            // 此回调表示：检测到了语音的尾端点，已经进入识别过程，不再接受语音输入
-//            showTip("结束说话");
         }
 
         @Override
@@ -382,7 +414,6 @@ public class MuMuAVChat extends AppCompatActivity {
 
         @Override
         public void onVolumeChanged(int volume, byte[] data) {
-//            showTip("当前正在说话，音量大小 = " + volume + " 返回音频数据 = " + data.length);
         }
 
         @Override
@@ -469,14 +500,22 @@ public class MuMuAVChat extends AppCompatActivity {
 
         @Override
         public void onSpeakBegin() {
+            ttsSpeaking = true;
         }
 
         @Override
         public void onSpeakPaused() {
+            ttsSpeaking = false;
         }
 
         @Override
         public void onSpeakResumed() {
+            ttsSpeaking = true;
+        }
+
+        @Override
+        public void onCompleted(SpeechError error) {
+            ttsSpeaking = false;
         }
 
         @Override
@@ -486,10 +525,6 @@ public class MuMuAVChat extends AppCompatActivity {
 
         @Override
         public void onSpeakProgress(int percent, int beginPos, int endPos) {
-        }
-
-        @Override
-        public void onCompleted(SpeechError error) {
         }
 
         @Override
@@ -503,6 +538,32 @@ public class MuMuAVChat extends AppCompatActivity {
             ttsSpeaking = false;
         }
     }
+
+    public void playPCMFile(String filePath) {
+        AudioTrack audioTrack = null;
+        try {
+            FileInputStream fis = new FileInputStream(filePath);
+            int bufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
+            audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT, bufferSize, AudioTrack.MODE_STREAM);
+            audioTrack.play();
+
+            byte[] buffer = new byte[bufferSize];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                audioTrack.write(buffer, 0, bytesRead);
+            }
+            audioTrack.stop();
+            audioTrack.release();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (audioTrack != null) {
+                audioTrack.release();
+            }
+        }
+    }
+
 
     @Override
     protected void onDestroy() {
