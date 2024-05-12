@@ -25,6 +25,10 @@
 >**项目3简介**：科大讯飞语音配合百度千帆大模型做的智能语音助手app  
 >**项目3视频介绍**：[科大讯飞语音遇上百度千帆大模型](https://www.bilibili.com/video/BV1ht421w7MS/)  
 
+>**项目4**：MuMu  
+>**项目4简介**：MuMu聊天人工智能机器人，使用百度文心一言大模型和科大讯飞语音，支持打断对话  
+>**项目4视频介绍**：[对话丝滑的MuMu聊天机器人](https://www.bilibili.com/video/BV1kZ421j7FV/)  
+
 ## 项目说明 
 
 ### 项目1:app
@@ -39,6 +43,8 @@
 
 app_id获取地址：https://console.xfyun.cn/services/sparkapiCenter
 ![image-20240421154437816](https://cdn.jsdelivr.net/gh/mixiaojiediy/MDPicBed@main//img202404211544849.png)
+
+
 
 ### 项目2:MuMuChat
 
@@ -55,8 +61,6 @@ api_path也要付费购买一下或者选择免费的大模型api_path替换一�
 
 ![image-20240421162818468](https://cdn.jsdelivr.net/gh/mixiaojiediy/MDPicBed@main//img202404211628510.png)
 
-
-
 ### 项目3:MuMuVChat
 
 /res/values/strings.xml中
@@ -70,6 +74,18 @@ api_path也要付费购买一下或者选择免费的大模型api_path替换一�
 ```
 
 
+
+### 项目4:MuMu
+
+/res/values/strings.xml中
+
+添加app_id、api_path和access_token；
+
+```XML
+<string name="api_path">xxxxxx</string>
+<string name="access_token">xxxxxx</string>
+<string name="app_id">xxxxxxxx</string>
+```
 
 
 
