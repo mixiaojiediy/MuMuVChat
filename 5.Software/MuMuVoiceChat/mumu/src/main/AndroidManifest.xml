@@ -24,10 +24,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity
-            android:name="com.mumu.voicedemo.MainActivity"
-            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|fontScale"
-            android:screenOrientation="portrait" />
         <activity android:name="com.mumu.speech.setting.TtsSettings" />
         <activity android:name="com.mumu.speech.setting.IatSettings" />
         <activity

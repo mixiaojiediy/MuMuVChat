@@ -14,6 +14,7 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -32,8 +33,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.text.HtmlCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
 import com.iflytek.cloud.ErrorCode;
@@ -50,7 +49,6 @@ import com.mumu.speech.util.JsonParser;
 import com.mumu.voicedemo.msg.ChatBody;
 import com.mumu.voicedemo.msg.ChatContent;
 import com.mumu.voicedemo.msg.Msg;
-import com.mumu.voicedemo.msg.MsgAdapter;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -88,7 +86,7 @@ public class MuMu extends AppCompatActivity {
             AudioFormat.CHANNEL_IN_MONO,
             AudioFormat.ENCODING_PCM_16BIT
     );
-    private static final int SILENCE_TIMEOUT_MS = 2000; // 4秒无声超时
+    private static final int SILENCE_TIMEOUT_MS = 2000; // 2秒无声超时
     private boolean permissionToRecordAccepted = false;
     private String[] permissions = {Manifest.permission.RECORD_AUDIO};
     private AudioManager audioManager;
@@ -101,8 +99,6 @@ public class MuMu extends AppCompatActivity {
     private long lastSpokenTime;
 
     private final List<Msg> msgList = new ArrayList<>();
-    private RecyclerView msgRecyclerView;
-    private MsgAdapter adapter;
 
     private HashMap<String, String> mIatResults = new LinkedHashMap<>(); // 用HashMap存储听写结果
     private String content;
@@ -118,19 +114,29 @@ public class MuMu extends AppCompatActivity {
     private int speakingThreshold;
 
     private SharedPreferences mSharedPreferences;
+    private AnimationDrawable anim;
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable animationControlTask = new Runnable() {
+        @Override
+        public void run() {
+            controlAnimation();
+            handler.postDelayed(this, 100); // 每100毫秒检查一次
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mumu);
-        ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
-        initView();
+
         mSharedPreferences = getSharedPreferences(TtsSettings.PREFER_NAME, Activity.MODE_PRIVATE);
         boolean privacyConfirm = mSharedPreferences.getBoolean(SpeechApp.PRIVACY_KEY, false);
         if (!privacyConfirm) {
             showPrivacyDialog();
         }
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
         SpeechApp.initializeMsc(MuMu.this);
+        initView();
         initIat();
         initTTS();
         initAudioRecord();
@@ -140,33 +146,30 @@ public class MuMu extends AppCompatActivity {
     }
 
     private void initView() {
-//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-//        View decorView = getWindow().getDecorView();
-//        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN
-//                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-//                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-//        decorView.setSystemUiVisibility(uiOptions);
-
-        // 使用WindowCompat和WindowInsetsController来处理全屏和隐藏系统UI
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        final WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        if (controller != null) {
-            controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-            controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // 使用Android 10 (API级别 29) 或更高版本的功能
+            // 使用WindowCompat和WindowInsetsController来处理全屏和隐藏系统UI
+            WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+            final WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+            if (controller != null) {
+                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            // 使用旧版本的备选方案
+            View decorView = getWindow().getDecorView();
+            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            decorView.setSystemUiVisibility(uiOptions);
         }
-
-        // 强制横屏
-//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
         ImageView imageView = findViewById(R.id.imageView);
         imageView.setBackgroundResource(R.drawable.anim_emoticon_sequence);
-        AnimationDrawable anim = (AnimationDrawable) imageView.getBackground();
-        imageView.post(anim::start);
-        msgRecyclerView = findViewById(R.id.msg_recycler_view);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        msgRecyclerView.setLayoutManager(layoutManager);
-        adapter = new MsgAdapter(msgList);
-        msgRecyclerView.setAdapter(adapter);
+        anim = (AnimationDrawable) imageView.getBackground();
+//        imageView.post(anim::start);
+//        anim.stop();
+        // 启动任务
+        handler.post(animationControlTask);
     }
 
     @Override
@@ -367,8 +370,7 @@ public class MuMu extends AppCompatActivity {
             short amplitude = (short) ((audioBuffer[i] & 0xff) | (audioBuffer[i + 1] << 8));
             sumAmplitude += Math.abs(amplitude);
         }
-        return sumAmplitude / (length / 2) > 2000; // 阈值1000可以调整
-//        return sumAmplitude / (length / 2) > speakingThreshold; // 阈值1000可以调整
+        return sumAmplitude / (length / 2) > 3000; // 阈值1000可以调整
     }
 
     private void checkSilenceTimeout() {
@@ -388,9 +390,6 @@ public class MuMu extends AppCompatActivity {
         mIatResults.clear();
         // 设置音频来源为外部文件
         mIat.setParameter(SpeechConstant.AUDIO_SOURCE, "-1");
-        // 也可以像以下这样直接设置音频文件路径识别（要求设置文件在sdcard上的全路径）：
-        // mIat.setParameter(SpeechConstant.AUDIO_SOURCE, "-2");
-        // mIat.setParameter(SpeechConstant.ASR_SOURCE_PATH, "sdcard/XXX/XXX.pcm");
         int ret = mIat.startListening(mRecognizerListener);
         if (ret != ErrorCode.SUCCESS) {
             showTip("识别失败,错误码：" + ret + ",请点击网址https://www.xfyun.cn/document/error-code查询解决方案");
@@ -441,8 +440,6 @@ public class MuMu extends AppCompatActivity {
                     Msg msg = new Msg(content, Msg.TYPE_SENT);
                     chatContent.add(content, Msg.TYPE_SENT);
                     msgList.add(msg);
-//                    adapter.notifyItemInserted(msgList.size() - 1); // 当有新消息时，刷新ListView中的显示
-//                    msgRecyclerView.scrollToPosition(msgList.size() - 1); // 将ListView定位到最后一行
                     Log.d("mumuchat", chatContent.getChatContent());
                     sendRequest(chatContent.getChatContent());
                 }
@@ -485,8 +482,6 @@ public class MuMu extends AppCompatActivity {
             chatContent.add(result, Msg.TYPE_RECEIVED);
             Log.d("mumuchat1", chatContent.getChatContent());
             msgList.add(msg);
-            adapter.notifyItemInserted(msgList.size() - 1); // 当有新消息时，刷新ListView中的显示
-            msgRecyclerView.scrollToPosition(msgList.size() - 1); // 将ListView定位到最后一行
             ttsPlay(result);
         });
     }
@@ -602,7 +597,6 @@ public class MuMu extends AppCompatActivity {
         }
     }
 
-
     @Override
     protected void onDestroy() {
         if (audioRecord != null) {
@@ -615,6 +609,7 @@ public class MuMu extends AppCompatActivity {
         if (silenceTimer != null) {
             silenceTimer.cancel();
         }
+        handler.removeCallbacks(animationControlTask); // 停止任务防止内存泄漏
         super.onDestroy();
     }
 
@@ -654,4 +649,15 @@ public class MuMu extends AppCompatActivity {
         dialog.setCanceledOnTouchOutside(false);
         dialog.show();
     }
+
+    private void controlAnimation() {
+        if (ttsSpeaking && !anim.isRunning()) {
+            anim.start();
+        } else if (!ttsSpeaking && anim.isRunning()) {
+            anim.stop();
+            anim.selectDrawable(0);  // 选择第一帧，索引为0
+        }
+    }
+
+
 }

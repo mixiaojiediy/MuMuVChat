@@ -3,7 +3,7 @@ package com.mumu.voicedemo.msg;
 public class ChatContent {
 
 
-    private String chatContent = "";//"{\"messages\":[{\"role\":\"user\",\"content\":\"你好 \"}]}"
+    private String chatContent = "";
     private String chatContentBody = "";
 
     public String getChatContent() {
@@ -25,7 +25,6 @@ public class ChatContent {
                 chatContentBody = chatContentBody + ",{\"role\":\"assistant\",\"content\":\"" + content + "\"}";
             }
         }
-        chatContent = "{\"messages\":[" + chatContentBody + "]}";
-//        chatContent = "{\"messages\":[" + chatContentBody + "],\"temperature\":0.95,\"top_p\":0.8,\"penalty_score\":1,\"disable_search\":false,\"enable_citation\":false}";
+        chatContent = "{\"messages\":[" + chatContentBody + "],\"system\":\"你是一个中国江苏南京五年级的小学生，名字叫木木，年龄：13岁，各个学科的成绩都不错，班级排名第一，很听话，说话不多\"}";
     }
 }
